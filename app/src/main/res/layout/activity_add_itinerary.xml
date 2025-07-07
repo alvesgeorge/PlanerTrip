@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="➕ Nova Atividade"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#2196F3"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Viagem -->
+        <TextView
+            android:id="@+id/textTripName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Viagem: "
+            android:textSize="16sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Dia -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dia da Viagem"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editDay"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Ex: 1"
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:inputType="number"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Data -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Data (opcional)"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editDate"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Ex: 15/01/2024"
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Título -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Título da Atividade"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editTitle"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Ex: Visita ao Cristo Redentor"
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Descrição -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Descrição"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editDescription"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:hint="Detalhes da atividade..."
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:gravity="top"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Categoria -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Categoria"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/spinnerCategory"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#FFFFFF"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Horários -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Horário Início"
+                    android:textSize="14sp"
+                    android:textColor="#212121"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/editStartTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Ex: 09:00"
+                    android:background="#FFFFFF"
+                    android:padding="12dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Horário Fim"
+                    android:textSize="14sp"
+                    android:textColor="#212121"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/editEndTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Ex: 12:00"
+                    android:background="#FFFFFF"
+                    android:padding="12dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Local -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Local"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editLocation"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Ex: Corcovado, Rio de Janeiro"
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Custo Estimado -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Custo Estimado"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editCost"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Ex: R$ 50,00"
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Observações -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Observações"
+            android:textSize="16sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/editNotes"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:hint="Observações adicionais..."
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:gravity="top"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Botões -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonCancel"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Cancelar"
+                android:textSize="16sp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#757575" />
+
+            <Button
+                android:id="@+id/buttonSave"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="💾 Salvar"
+                android:textSize="16sp"
+                android:layout_marginStart="8dp" />
+
+        </LinearLayout>
+
+        <!-- Status -->
+        <TextView
+            android:id="@+id/textStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Preencha os campos para adicionar a atividade"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:gravity="center"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+
+</ScrollView>
