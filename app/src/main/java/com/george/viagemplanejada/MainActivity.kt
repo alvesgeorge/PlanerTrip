@@ -1,11 +1,14 @@
 package com.george.viagemplanejada
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowInsetsController
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.george.viagemplanejada.databinding.ActivityMainBinding
 import com.george.viagemplanejada.data.DataManager
@@ -25,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Configurar status bar transparente
+        // Configurar status bar transparente (CORRIGIDO)
         setupStatusBar()
 
         // Inicializar DataManager
@@ -47,10 +50,28 @@ class MainActivity : AppCompatActivity() {
         loadTrips()
     }
 
+    // ✅ MÉTODO CORRIGIDO - Remove warnings de APIs deprecated
     private fun setupStatusBar() {
+        // API moderna para configurar status bar
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // API 30+ (Android 11+)
+            window.insetsController?.let { controller ->
+                controller.setSystemBarsAppearance(
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                )
+            }
+        } else {
+            // API 23-29 (Android 6-10) - Manter compatibilidade
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        }
+
+        // Cor da status bar
         window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.decorView.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     }
 
     private fun setupUI() {
@@ -122,29 +143,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openNewTripActivity() {
-        val intent = Intent(this, CreateTripActivity::class.java)
+    // ✅ MÉTODO CORRIGIDO - Remove warning de overridePendingTransition
+    private fun startActivityWithTransition(intent: Intent) {
         startActivity(intent)
 
-        // Animação de transição
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // API 34+ - usar transições modernas
+            overrideActivityTransition(OVERRIDE_TRANSITION_OPEN,
+                R.anim.slide_in_right, R.anim.slide_out_left)
+        } else {
+            // Fallback para APIs antigas
+            @Suppress("DEPRECATION")
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
+    }
+
+    private fun openNewTripActivity() {
+        val intent = Intent(this, CreateTripActivity::class.java)
+        startActivityWithTransition(intent) // ✅ USANDO MÉTODO CORRIGIDO
     }
 
     private fun openTripDetails(trip: TripItem) {
         val intent = Intent(this, ItineraryActivity::class.java)
         intent.putExtra("trip_id", trip.id)
         intent.putExtra("trip_name", trip.name)
-        startActivity(intent)
-
-        // Animação de transição
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        startActivityWithTransition(intent) // ✅ USANDO MÉTODO CORRIGIDO
     }
 
     private fun openTripsListActivity() {
         val intent = Intent(this, TripsListActivity::class.java)
-        startActivity(intent)
-
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        startActivityWithTransition(intent) // ✅ USANDO MÉTODO CORRIGIDO
     }
 
     private fun showSearchDestination() {

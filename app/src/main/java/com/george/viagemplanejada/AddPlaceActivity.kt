@@ -1,296 +1,276 @@
 package com.george.viagemplanejada
 
+import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.Intent
 import android.os.Bundle
-import android.widget.*
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.george.viagemplanejada.databinding.ActivityAddPlaceBinding
 import com.george.viagemplanejada.data.DataManager
-import com.george.viagemplanejada.data.PlaceItem // ← IMPORT CORRETO
+import com.george.viagemplanejada.data.PlaceItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
 class AddPlaceActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityAddPlaceBinding
     private lateinit var dataManager: DataManager
-    private lateinit var editPlaceName: EditText
-    private lateinit var editPlaceAddress: AutoCompleteTextView
-    private lateinit var spinnerDay: Spinner
-    private lateinit var spinnerCategory: Spinner
-    private lateinit var editVisitDuration: EditText
-    private lateinit var editPreferredTime: EditText
-    private lateinit var editPlaceCost: EditText
-    private lateinit var editPlaceDescription: EditText
-    private lateinit var buttonScanNote: Button
-    private lateinit var buttonSavePlace: Button
-    private lateinit var buttonBack: Button
+    private var selectedDate = ""
+    private var selectedTime = ""
+    private var tripId = ""
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-    // RadioButtons para prioridade
-    private lateinit var radioHighPriority: RadioButton
-    private lateinit var radioMediumPriority: RadioButton
-    private lateinit var radioLowPriority: RadioButton
-
-    private var tripId: String = ""
-    private var tripName: String = ""
+    // Para busca de endereços
+    private val addressSuggestions = mutableListOf<String>()
+    private lateinit var addressAdapter: ArrayAdapter<String>
+    private var isSelectingAddress = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_place)
+
+        binding = ActivityAddPlaceBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         dataManager = DataManager.getInstance(this)
+        tripId = intent.getStringExtra("trip_id") ?: dataManager.getCurrentTripId() ?: ""
 
         initViews()
-        getTripData()
-        setupSpinners()
-        setupListeners()
+        setupAddressSearch()
+
+        // Definir data e hora atuais como padrão
+        val now = Calendar.getInstance()
+        selectedDate = dateFormat.format(now.time)
+        selectedTime = timeFormat.format(now.time)
+        binding.editPlaceDate.setText(selectedDate)
+        binding.editPlaceTime.setText(selectedTime)
     }
 
     private fun initViews() {
-        editPlaceName = findViewById(R.id.editPlaceName)
-        editPlaceAddress = findViewById(R.id.editPlaceAddress)
-        spinnerDay = findViewById(R.id.spinnerDay)
-        spinnerCategory = findViewById(R.id.spinnerCategory)
-        editVisitDuration = findViewById(R.id.editVisitDuration)
-        editPreferredTime = findViewById(R.id.editPreferredTime)
-        editPlaceCost = findViewById(R.id.editPlaceCost)
-        editPlaceDescription = findViewById(R.id.editPlaceDescription)
-        buttonScanNote = findViewById(R.id.buttonScanNote)
-        buttonSavePlace = findViewById(R.id.buttonSavePlace)
-        buttonBack = findViewById(R.id.buttonBack)
-
-        radioHighPriority = findViewById(R.id.radioHighPriority)
-        radioMediumPriority = findViewById(R.id.radioMediumPriority)
-        radioLowPriority = findViewById(R.id.radioLowPriority)
-    }
-
-    private fun getTripData() {
-        tripId = intent.getStringExtra("trip_id") ?: ""
-        tripName = intent.getStringExtra("trip_name") ?: ""
-
-        // Se não temos tripId, tentar obter da viagem atual
-        if (tripId.isEmpty()) {
-            val currentTrip = dataManager.getCurrentTrip()
-            if (currentTrip != null) {
-                tripId = currentTrip.id
-                tripName = currentTrip.name
-            }
-        }
-
-        supportActionBar?.title = "Adicionar Local - $tripName"
-    }
-
-    private fun setupSpinners() {
-        // Setup do Spinner de Dias - usando dados da viagem real
-        val trip = dataManager.getTripById(tripId)
-        val daysList = if (trip != null) {
-            generateDaysList(trip.startDate, trip.endDate)
-        } else {
-            // Fallback para dias genéricos
-            listOf(
-                "📅 Dia 1",
-                "📅 Dia 2",
-                "📅 Dia 3",
-                "📅 Dia 4",
-                "📅 Dia 5"
-            )
-        }
-
-        val daysAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, daysList)
-        daysAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerDay.adapter = daysAdapter
-
-        // Setup do Spinner de Categorias
-        val categories = listOf(
-            "🏛️ Turismo",
-            "🎭 Cultura",
-            "🌳 Natureza",
-            "🎡 Lazer",
-            "🍽️ Gastronomia",
-            "🛍️ Compras",
-            "🏨 Hospedagem",
-            "🚗 Transporte",
-            "📍 Outros"
-        )
-
-        val categoriesAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
-        categoriesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerCategory.adapter = categoriesAdapter
-    }
-
-    private fun generateDaysList(startDate: String, endDate: String): List<String> {
-        val daysList = mutableListOf<String>()
-
-        if (startDate.isNotEmpty() && endDate.isNotEmpty()) {
-            try {
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                val start = sdf.parse(startDate)
-                val end = sdf.parse(endDate)
-
-                if (start != null && end != null) {
-                    val calendar = Calendar.getInstance()
-                    calendar.time = start
-                    var dayCount = 1
-
-                    while (calendar.time <= end) {
-                        val dayString = "📅 Dia $dayCount (${sdf.format(calendar.time)})"
-                        daysList.add(dayString)
-                        calendar.add(Calendar.DAY_OF_MONTH, 1)
-                        dayCount++
-                    }
-                }
-            } catch (e: Exception) {
-                // Se houver erro, usar dias genéricos
-                for (i in 1..5) {
-                    daysList.add("�� Dia $i")
-                }
-            }
-        } else {
-            // Dias genéricos se não houver datas
-            for (i in 1..5) {
-                daysList.add("📅 Dia $i")
-            }
-        }
-
-        return daysList
-    }
-
-    private fun setupListeners() {
-        buttonBack.setOnClickListener {
+        // ✅ CORREÇÃO: Usar ImageButton em vez de Button
+        binding.buttonBack.setOnClickListener {
             finish()
         }
 
-        // Configurar seletor de horário
-        editPreferredTime.setOnClickListener {
+        binding.editPlaceDate.setOnClickListener {
+            showDatePicker()
+        }
+
+        binding.editPlaceTime.setOnClickListener {
             showTimePicker()
         }
 
-        // Configurar scanner de nota (placeholder)
-        buttonScanNote.setOnClickListener {
-            Toast.makeText(this, "📸 Funcionalidade de scanner em desenvolvimento!", Toast.LENGTH_SHORT).show()
-        }
-
-        // Configurar AutoComplete para endereços
-        setupAddressAutoComplete()
-
-        buttonSavePlace.setOnClickListener {
+        binding.buttonSavePlace.setOnClickListener {
             savePlace()
         }
     }
 
-    private fun setupAddressAutoComplete() {
-        val famousPlaces = arrayOf(
-            "Cristo Redentor - Rio de Janeiro, RJ",
-            "Pão de Açúcar - Rio de Janeiro, RJ",
-            "Copacabana - Rio de Janeiro, RJ",
-            "Ipanema - Rio de Janeiro, RJ",
-            "Avenida Paulista - São Paulo, SP",
-            "Marco Zero - Recife, PE",
-            "Pelourinho - Salvador, BA",
-            "Centro Histórico - Ouro Preto, MG",
-            "Cataratas do Iguaçu - Foz do Iguaçu, PR",
-            "Teatro Amazonas - Manaus, AM",
-            "Bonito - Mato Grosso do Sul",
-            "Fernando de Noronha - Pernambuco",
-            "Gramado - Rio Grande do Sul",
-            "Campos do Jordão - São Paulo",
-            "Búzios - Rio de Janeiro"
+    private fun setupAddressSearch() {
+        // Configurar adapter para sugestões de endereço
+        addressAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, addressSuggestions)
+        binding.autoCompleteAddress.setAdapter(addressAdapter)
+
+        // Configurar busca em tempo real
+        binding.autoCompleteAddress.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                if (!isSelectingAddress && s != null && s.length >= 5) {
+                    searchAddresses(s.toString())
+                }
+                isSelectingAddress = false
+            }
+        })
+
+        // Configurar seleção de item
+        binding.autoCompleteAddress.setOnItemClickListener { _, _, position, _ ->
+            isSelectingAddress = true
+            val selectedAddress = addressSuggestions[position]
+            binding.autoCompleteAddress.setText(selectedAddress)
+            binding.autoCompleteAddress.dismissDropDown()
+        }
+    }
+
+    private fun searchAddresses(query: String) {
+        // Mostrar indicador de carregamento
+        binding.progressBarAddress.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            try {
+                val addresses = withContext(Dispatchers.IO) {
+                    searchAddressesOnline(query)
+                }
+
+                addressSuggestions.clear()
+                addressSuggestions.addAll(addresses)
+                addressAdapter.notifyDataSetChanged()
+
+                // Mostrar dropdown se há sugestões
+                if (addresses.isNotEmpty()) {
+                    binding.autoCompleteAddress.showDropDown()
+                }
+
+            } catch (e: Exception) {
+                // Fallback para endereços genéricos
+                val fallbackAddresses = getFallbackAddresses(query)
+                addressSuggestions.clear()
+                addressSuggestions.addAll(fallbackAddresses)
+                addressAdapter.notifyDataSetChanged()
+
+                if (fallbackAddresses.isNotEmpty()) {
+                    binding.autoCompleteAddress.showDropDown()
+                }
+            } finally {
+                binding.progressBarAddress.visibility = View.GONE
+            }
+        }
+    }
+
+    private suspend fun searchAddressesOnline(query: String): List<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Usar API de geocoding (OpenStreetMap Nominatim)
+                val url = "https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&q=${query}"
+                val response = URL(url).readText()
+
+                // Parse do JSON
+                val addresses = mutableListOf<String>()
+                val jsonArray = JSONArray(response)
+
+                for (i in 0 until jsonArray.length()) {
+                    val jsonObject = jsonArray.getJSONObject(i)
+                    val displayName = jsonObject.getString("display_name")
+
+                    if (!addresses.contains(displayName) && addresses.size < 5) {
+                        addresses.add(displayName)
+                    }
+                }
+
+                addresses
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+    }
+
+    private fun getFallbackAddresses(query: String): List<String> {
+        val commonPlaces = listOf(
+            "Centro, ${query}",
+            "Aeroporto de ${query}",
+            "Rodoviária de ${query}",
+            "Centro Histórico, ${query}",
+            "Praia de ${query}",
+            "Shopping ${query}",
+            "Estação ${query}",
+            "Hotel em ${query}",
+            "Restaurante em ${query}",
+            "Ponto Turístico, ${query}"
         )
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, famousPlaces)
-        editPlaceAddress.setAdapter(adapter)
-        editPlaceAddress.threshold = 2
+        return commonPlaces.take(5)
+    }
+
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+
+        DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                calendar.set(year, month, dayOfMonth)
+                selectedDate = dateFormat.format(calendar.time)
+                binding.editPlaceDate.setText(selectedDate)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     private fun showTimePicker() {
         val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
 
-        TimePickerDialog(this, { _, selectedHour, selectedMinute ->
-            val timeString = String.format("%02d:%02d", selectedHour, selectedMinute)
-            editPreferredTime.setText(timeString)
-        }, hour, minute, true).show()
+        TimePickerDialog(
+            this,
+            { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(Calendar.MINUTE, minute)
+                selectedTime = timeFormat.format(calendar.time)
+                binding.editPlaceTime.setText(selectedTime)
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        ).show()
     }
-
     private fun savePlace() {
-        val name = editPlaceName.text.toString().trim()
-        val address = editPlaceAddress.text.toString().trim()
-        val day = spinnerDay.selectedItem.toString()
-        val category = spinnerCategory.selectedItem.toString()
-        val durationText = editVisitDuration.text.toString().trim()
-        val preferredTime = editPreferredTime.text.toString().trim()
-        val costText = editPlaceCost.text.toString().trim()
-        val description = editPlaceDescription.text.toString().trim()
+        val name = binding.editPlaceName.text.toString().trim()
+        val address = binding.autoCompleteAddress.text.toString().trim()
+        val description = binding.editPlaceDescription.text.toString().trim()
+        val durationText = binding.editPlaceDuration.text.toString().trim().ifEmpty { "2" }
+        val costText = binding.editPlaceCost.text.toString().trim().ifEmpty { "0.00" }
 
-        // Validações básicas
+        // Validações
         if (name.isEmpty()) {
-            editPlaceName.error = "Nome é obrigatório"
-            editPlaceName.requestFocus()
+            binding.editPlaceName.error = "Nome do local é obrigatório"
             return
         }
 
         if (address.isEmpty()) {
-            editPlaceAddress.error = "Endereço é obrigatório"
-            editPlaceAddress.requestFocus()
+            binding.autoCompleteAddress.error = "Endereço é obrigatório"
             return
         }
 
-        if (tripId.isEmpty()) {
-            Toast.makeText(this, "❌ Erro: ID da viagem não encontrado", Toast.LENGTH_LONG).show()
+        if (selectedDate.isEmpty()) {
+            Toast.makeText(this, "Selecione uma data", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Determinar prioridade
-        val priority = when {
-            radioHighPriority.isChecked -> "Alta"
-            radioMediumPriority.isChecked -> "Média"
-            radioLowPriority.isChecked -> "Baixa"
-            else -> "Média"
+        if (selectedTime.isEmpty()) {
+            Toast.makeText(this, "Selecione um horário", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        // Converter duração para Double
-        val duration = if (durationText.isNotEmpty()) {
-            durationText.toDoubleOrNull() ?: 2.0
-        } else {
+        // ✅ CONVERSÕES CORRETAS para Double
+        val duration = try {
+            // Extrair apenas números da duração (ex: "2 horas" -> 2.0)
+            durationText.replace(Regex("[^0-9.,]"), "").replace(",", ".").toDoubleOrNull() ?: 2.0
+        } catch (e: Exception) {
             2.0
         }
 
-        // Converter custo para Double
-        val cost = if (costText.isNotEmpty()) {
-            costText.toDoubleOrNull() ?: 0.0
-        } else {
+        val cost = try {
+            costText.replace(",", ".").toDoubleOrNull() ?: 0.0
+        } catch (e: Exception) {
             0.0
         }
 
-        // Criar objeto PlaceItem usando o tipo correto
+        // ✅ CRIAR PLACE COM TIPOS CORRETOS
         val place = PlaceItem(
-            id = dataManager.generateId(), // ← USAR assim
+            id = dataManager.generateId(),
             name = name,
             address = address,
-            day = day,
-            preferredTime = preferredTime,
-            duration = duration,
-            category = category,
-            priority = priority,
-            cost = cost,
+            day = selectedDate,
+            category = "Geral",
+            duration = duration,           // ✅ Double
+            preferredTime = selectedTime,
+            cost = cost,                   // ✅ Double
             description = description
+            // priority tem valor padrão "Média"
         )
 
-        // Salvar usando o método savePlace do DataManager
-        try {
-            dataManager.savePlace(tripId, place)
-
-            Toast.makeText(this, "✅ Local '$name' adicionado com sucesso!", Toast.LENGTH_SHORT).show()
-
-            // Retornar para a tela anterior
-            val resultIntent = Intent()
-            resultIntent.putExtra("place_added", true)
-            resultIntent.putExtra("place_name", name)
-            setResult(RESULT_OK, resultIntent)
-            finish()
-
-        } catch (e: Exception) {
-            Toast.makeText(this, "❌ Erro ao salvar local: ${e.message}", Toast.LENGTH_LONG).show()
-        }
+        dataManager.savePlace(tripId, place)
+        Toast.makeText(this, "✅ Local '$name' adicionado com sucesso!", Toast.LENGTH_SHORT).show()
+        finish()
     }
 }

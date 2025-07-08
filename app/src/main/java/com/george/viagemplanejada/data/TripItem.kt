@@ -1,4 +1,3 @@
-// app/src/main/java/com/george/viagemplanejada/data/TripItem.kt
 package com.george.viagemplanejada.data
 
 data class TripItem(

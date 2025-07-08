@@ -9,8 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.george.viagemplanejada.databinding.ActivityBudgetBinding
 import com.george.viagemplanejada.data.DataManager
+import com.george.viagemplanejada.data.ExpenseItem
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.*
 
 class BudgetActivity : AppCompatActivity() {
@@ -40,7 +40,7 @@ class BudgetActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        loadExpenses() // Recarregar quando voltar de AddExpenseActivity
+        loadExpenses()
         updateBudgetInfo()
     }
 
@@ -49,8 +49,7 @@ class BudgetActivity : AppCompatActivity() {
         tripName = intent.getStringExtra("trip_name") ?: "Minha Viagem"
         binding.textTripName.text = "💰 Orçamento: $tripName"
 
-        // Carregar orçamento salvo
-        totalBudget = dataManager.getBudget(tripId) // ← JÁ CORRIGIDO NO DATAMANAGER
+        totalBudget = dataManager.getBudget(tripId)
     }
 
     private fun setupUI() {
@@ -83,12 +82,10 @@ class BudgetActivity : AppCompatActivity() {
 
     private fun loadExpenses() {
         expenses.clear()
-        expenses.addAll(dataManager.getExpenses(tripId))  // ← Agora retorna o tipo correto
+        expenses.addAll(dataManager.getExpenses(tripId))
         updateEmptyState()
         expenseAdapter.updateExpenses(expenses)
     }
-
-
 
     private fun updateEmptyState() {
         if (expenses.isEmpty()) {
@@ -141,7 +138,7 @@ class BudgetActivity : AppCompatActivity() {
                 val newBudget = editText.text.toString().toDoubleOrNull()
                 if (newBudget != null && newBudget > 0) {
                     totalBudget = newBudget
-                    dataManager.saveBudget(tripId, totalBudget) // ← JÁ CORRIGIDO NO DATAMANAGER
+                    dataManager.saveBudget(tripId, totalBudget)
                     updateBudgetInfo()
                     Toast.makeText(this, "✅ Orçamento salvo!", Toast.LENGTH_SHORT).show()
                 } else {
@@ -170,7 +167,7 @@ class BudgetActivity : AppCompatActivity() {
     }
 
     private fun deleteExpense(expense: ExpenseItem) {
-        val message = "Deseja excluir ${expense.description}?"
+        val message = "Deseja excluir ${expense.title}?"
 
         AlertDialog.Builder(this)
             .setTitle("⚠️ Confirmar Exclusão")
@@ -191,11 +188,11 @@ class BudgetActivity : AppCompatActivity() {
             appendLine("🏷️ Categoria: ${expense.category}")
             appendLine("💳 Pagamento: ${expense.paymentMethod}")
             appendLine("📅 Data: ${expense.date}")
-            append("📝 Observações: ${expense.notes}")
+            append("📝 Observações: ${expense.description}")
         }
 
         AlertDialog.Builder(this)
-            .setTitle(expense.description)
+            .setTitle(expense.title)
             .setMessage(details)
             .setPositiveButton("OK", null)
             .show()
@@ -203,10 +200,5 @@ class BudgetActivity : AppCompatActivity() {
 
     private fun formatCurrency(amount: Double): String {
         return NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(amount)
-    }
-
-    private fun getCurrentDate(): String {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        return sdf.format(Date())
     }
 }

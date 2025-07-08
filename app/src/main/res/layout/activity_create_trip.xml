@@ -59,11 +59,11 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Card Informações Básicas -->
+            <!-- Card Informações -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="24dp"
                 style="@style/CustomCard">
 
                 <LinearLayout
@@ -71,15 +71,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ℹ️ Informações Básicas"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="16dp" />
 
                     <!-- Nome da viagem -->
                     <com.google.android.material.textfield.TextInputLayout
@@ -93,12 +84,12 @@
                             android:id="@+id/editTripName"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="🗺️ Nome da viagem"
+                            android:hint="📝 Nome da viagem"
                             android:inputType="textCapWords" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Destino -->
+                    <!-- Destino com busca -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -106,58 +97,27 @@
                         app:boxStrokeColor="@color/primary_blue"
                         app:hintTextColor="@color/primary_blue">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editDestination"
+                        <AutoCompleteTextView
+                            android:id="@+id/autoCompleteDestination"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="📍 Destino principal"
-                            android:inputType="textCapWords" />
+                            android:hint="🌍 Destino"
+                            android:inputType="textCapWords"
+                            android:completionThreshold="3"
+                            android:dropDownHeight="200dp" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Descrição -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:boxStrokeColor="@color/primary_blue"
-                        app:hintTextColor="@color/primary_blue">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editDescription"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="📝 Descrição (opcional)"
-                            android:inputType="textMultiLine"
-                            android:lines="3"
-                            android:maxLines="5" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Card Datas e Orçamento -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                style="@style/CustomCard">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📅 Datas e Orçamento"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="16dp" />
+                    <!-- Indicador de carregamento -->
+                    <ProgressBar
+                        android:id="@+id/progressBarCity"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="-40dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:visibility="gone" />
 
                     <!-- Datas -->
                     <LinearLayout
@@ -206,7 +166,7 @@
 
                     </LinearLayout>
 
-                    <!-- Orçamento -->
+                    <!-- Descrição (opcional) -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -214,11 +174,13 @@
                         app:hintTextColor="@color/primary_blue">
 
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editBudget"
+                            android:id="@+id/editTripDescription"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="💰 Orçamento total (R\$)"
-                            android:inputType="numberDecimal" />
+                            android:hint="📄 Descrição (opcional)"
+                            android:inputType="textMultiLine"
+                            android:lines="3"
+                            android:maxLines="5" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -231,11 +193,10 @@
                 android:id="@+id/buttonCreateTrip"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="✈️ Criar Viagem"
+                android:text="✅ Criar Viagem"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                style="@style/PrimaryButton"
-                android:layout_marginBottom="32dp" />
+                style="@style/PrimaryButton" />
 
         </LinearLayout>
 

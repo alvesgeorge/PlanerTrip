@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.george.viagemplanejada.databinding.ActivityCalendarBinding
 import com.george.viagemplanejada.data.DataManager
+import com.george.viagemplanejada.data.EventItem
 import java.text.SimpleDateFormat
 import java.util.*
 

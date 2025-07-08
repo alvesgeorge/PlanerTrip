@@ -1,5 +1,4 @@
-// app/src/main/java/com/george/viagemplanejada/EventItem.kt
-package com.george.viagemplanejada
+package com.george.viagemplanejada.data
 
 data class EventItem(
     val id: String,
@@ -9,5 +8,6 @@ data class EventItem(
     val time: String,
     val location: String = "",
     val type: String = "Evento",
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
 )

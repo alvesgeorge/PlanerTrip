@@ -23,11 +23,9 @@ class DataManager private constructor(context: Context) {
         }
     }
 
-    // ========== MÉTODOS UTILITÁRIOS ==========
+    // ========== UTILITÁRIOS ==========
 
-    fun generateId(): String {
-        return UUID.randomUUID().toString()
-    }
+    fun generateId(): String = UUID.randomUUID().toString()
 
     fun getCurrentTripId(): String? {
         val currentTripId = sharedPreferences.getString("current_trip_id", null)
@@ -38,13 +36,11 @@ class DataManager private constructor(context: Context) {
             if (firstTrip != null) {
                 setCurrentTrip(firstTrip.id)
                 firstTrip.id
-            } else {
-                null
-            }
+            } else null
         }
     }
 
-    // ========== MÉTODOS PARA TRIPS ==========
+    // ========== TRIPS ==========
 
     fun saveTrip(trip: TripItem) {
         val trips = getAllTrips().toMutableList()
@@ -77,26 +73,25 @@ class DataManager private constructor(context: Context) {
         val json = gson.toJson(trips)
         sharedPreferences.edit().putString("trips", json).apply()
 
-        deletePlacesForTrip(tripId)
-        deleteEventsForTrip(tripId)
-        deleteExpensesForTrip(tripId)
-        deleteBudgetForTrip(tripId)
+        // Limpar dados relacionados
+        sharedPreferences.edit()
+            .remove("places_$tripId")
+            .remove("events_$tripId")
+            .remove("expenses_$tripId")
+            .remove("budget_$tripId")
+            .apply()
     }
 
     fun getCurrentTrip(): TripItem? {
         val currentTripId = getCurrentTripId()
-        return if (currentTripId != null) {
-            getTripById(currentTripId)
-        } else {
-            getAllTrips().firstOrNull()
-        }
+        return if (currentTripId != null) getTripById(currentTripId) else null
     }
 
     fun setCurrentTrip(tripId: String) {
         sharedPreferences.edit().putString("current_trip_id", tripId).apply()
     }
 
-    // ========== MÉTODOS PARA PLACES ==========
+    // ========== PLACES ==========
 
     fun savePlace(tripId: String, place: PlaceItem) {
         val key = "places_$tripId"
@@ -129,16 +124,11 @@ class DataManager private constructor(context: Context) {
         sharedPreferences.edit().putString(key, json).apply()
     }
 
-    private fun deletePlacesForTrip(tripId: String) {
-        val key = "places_$tripId"
-        sharedPreferences.edit().remove(key).apply()
-    }
+    // ========== EVENTS ==========
 
-    // ========== MÉTODOS PARA EVENTS (COMPATIBILIDADE) ==========
-
-    fun saveEvent(tripId: String, event: com.george.viagemplanejada.EventItem) {
+    fun saveEvent(tripId: String, event: EventItem) {
         val key = "events_$tripId"
-        val events = getEventsCompat(tripId).toMutableList()
+        val events = getEvents(tripId).toMutableList()
         val existingIndex = events.indexOfFirst { it.id == event.id }
 
         if (existingIndex != -1) {
@@ -151,36 +141,27 @@ class DataManager private constructor(context: Context) {
         sharedPreferences.edit().putString(key, json).apply()
     }
 
-    fun getEvents(tripId: String): List<com.george.viagemplanejada.EventItem> {
-        return getEventsCompat(tripId)
-    }
-
-    private fun getEventsCompat(tripId: String): List<com.george.viagemplanejada.EventItem> {
+    fun getEvents(tripId: String): List<EventItem> {
         val key = "events_$tripId"
         val json = sharedPreferences.getString(key, null) ?: return emptyList()
-        val type = object : TypeToken<List<com.george.viagemplanejada.EventItem>>() {}.type
+        val type = object : TypeToken<List<EventItem>>() {}.type
         return gson.fromJson(json, type) ?: emptyList()
     }
 
     fun deleteEvent(tripId: String, eventId: String) {
         val key = "events_$tripId"
-        val events = getEventsCompat(tripId).toMutableList()
+        val events = getEvents(tripId).toMutableList()
         events.removeAll { it.id == eventId }
 
         val json = gson.toJson(events)
         sharedPreferences.edit().putString(key, json).apply()
     }
 
-    private fun deleteEventsForTrip(tripId: String) {
-        val key = "events_$tripId"
-        sharedPreferences.edit().remove(key).apply()
-    }
+    // ========== EXPENSES ==========
 
-    // ========== MÉTODOS PARA EXPENSES (COMPATIBILIDADE) ==========
-
-    fun saveExpense(tripId: String, expense: com.george.viagemplanejada.ExpenseItem) {
+    fun saveExpense(tripId: String, expense: ExpenseItem) {
         val key = "expenses_$tripId"
-        val expenses = getExpensesCompat(tripId).toMutableList()
+        val expenses = getExpenses(tripId).toMutableList()
         val existingIndex = expenses.indexOfFirst { it.id == expense.id }
 
         if (existingIndex != -1) {
@@ -193,32 +174,23 @@ class DataManager private constructor(context: Context) {
         sharedPreferences.edit().putString(key, json).apply()
     }
 
-    fun getExpenses(tripId: String): List<com.george.viagemplanejada.ExpenseItem> {
-        return getExpensesCompat(tripId)
-    }
-
-    private fun getExpensesCompat(tripId: String): List<com.george.viagemplanejada.ExpenseItem> {
+    fun getExpenses(tripId: String): List<ExpenseItem> {
         val key = "expenses_$tripId"
         val json = sharedPreferences.getString(key, null) ?: return emptyList()
-        val type = object : TypeToken<List<com.george.viagemplanejada.ExpenseItem>>() {}.type
+        val type = object : TypeToken<List<ExpenseItem>>() {}.type
         return gson.fromJson(json, type) ?: emptyList()
     }
 
     fun deleteExpense(tripId: String, expenseId: String) {
         val key = "expenses_$tripId"
-        val expenses = getExpensesCompat(tripId).toMutableList()
+        val expenses = getExpenses(tripId).toMutableList()
         expenses.removeAll { it.id == expenseId }
 
         val json = gson.toJson(expenses)
         sharedPreferences.edit().putString(key, json).apply()
     }
 
-    private fun deleteExpensesForTrip(tripId: String) {
-        val key = "expenses_$tripId"
-        sharedPreferences.edit().remove(key).apply()
-    }
-
-    // ========== MÉTODOS PARA BUDGET ==========
+    // ========== BUDGET ==========
 
     fun getBudget(tripId: String): Double {
         val key = "budget_$tripId"
@@ -230,6 +202,12 @@ class DataManager private constructor(context: Context) {
         sharedPreferences.edit().putFloat(key, budget.toFloat()).apply()
     }
 
+    fun getBudgetItem(tripId: String): BudgetItem? {
+        val key = "budget_item_$tripId"
+        val json = sharedPreferences.getString(key, null) ?: return null
+        return gson.fromJson(json, BudgetItem::class.java)
+    }
+
     fun saveBudgetItem(tripId: String, budget: BudgetItem) {
         val key = "budget_item_$tripId"
         val json = gson.toJson(budget)
@@ -237,38 +215,19 @@ class DataManager private constructor(context: Context) {
         saveBudget(tripId, budget.totalBudget)
     }
 
-    fun getBudgetItem(tripId: String): BudgetItem? {
-        val key = "budget_item_$tripId"
-        val json = sharedPreferences.getString(key, null) ?: return null
-        return gson.fromJson(json, BudgetItem::class.java)
-    }
+    // ========== COMPATIBILIDADE ==========
 
-    private fun deleteBudgetForTrip(tripId: String) {
-        val key = "budget_$tripId"
-        val keyItem = "budget_item_$tripId"
-        sharedPreferences.edit()
-            .remove(key)
-            .remove(keyItem)
-            .apply()
-    }
-
-    // ========== MÉTODOS TEMPORÁRIOS PARA COMPATIBILIDADE ==========
-
-    fun getPlaceById(tripId: String, placeId: String): PlaceItem? {
-        return getPlaces(tripId).find { it.id == placeId }
-    }
-
-    fun saveEvent(event: com.george.viagemplanejada.EventItem) {
+    fun saveEvent(event: EventItem) {
         val tripId = getCurrentTripId() ?: return
         saveEvent(tripId, event)
     }
 
-    fun saveExpense(expense: com.george.viagemplanejada.ExpenseItem) {
+    fun saveExpense(expense: ExpenseItem) {
         val tripId = getCurrentTripId() ?: return
         saveExpense(tripId, expense)
     }
 
-    // ========== MÉTODOS GERAIS ==========
+    // ========== UTILIDADES ==========
 
     fun clearAllData() {
         sharedPreferences.edit().clear().apply()
@@ -277,18 +236,10 @@ class DataManager private constructor(context: Context) {
     fun exportData(): String {
         val allData = mapOf(
             "trips" to getAllTrips(),
-            "places" to getAllTrips().associate { trip ->
-                trip.id to getPlaces(trip.id)
-            },
-            "events" to getAllTrips().associate { trip ->
-                trip.id to getEvents(trip.id)
-            },
-            "expenses" to getAllTrips().associate { trip ->
-                trip.id to getExpenses(trip.id)
-            },
-            "budgets" to getAllTrips().associate { trip ->
-                trip.id to getBudget(trip.id)
-            }
+            "places" to getAllTrips().associate { it.id to getPlaces(it.id) },
+            "events" to getAllTrips().associate { it.id to getEvents(it.id) },
+            "expenses" to getAllTrips().associate { it.id to getExpenses(it.id) },
+            "budgets" to getAllTrips().associate { it.id to getBudget(it.id) }
         )
         return gson.toJson(allData)
     }

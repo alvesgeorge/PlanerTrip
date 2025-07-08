@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
-    <!-- AppBar com gradiente -->
+    <!-- AppBar -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -33,37 +33,13 @@
                     android:tint="@android:color/white"
                     android:layout_marginEnd="16dp" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📍 Adicionar Local"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@android:color/white" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Preencha as informações do local"
-                        android:textSize="12sp"
-                        android:textColor="@android:color/white"
-                        android:alpha="0.8" />
-
-                </LinearLayout>
-
-                <ImageButton
-                    android:id="@+id/buttonScanNote"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/ic_camera"
-                    android:background="@drawable/button_ripple"
-                    android:tint="@android:color/white" />
+                    android:text="📍 Novo Local"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white" />
 
             </LinearLayout>
 
@@ -71,7 +47,7 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Conteúdo principal -->
+    <!-- Conteúdo -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -81,13 +57,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <!-- Card de informações básicas -->
+            <!-- Card Informações -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="24dp"
                 style="@style/CustomCard">
 
                 <LinearLayout
@@ -95,15 +71,6 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ℹ️ Informações Básicas"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="16dp" />
 
                     <!-- Nome do local -->
                     <com.google.android.material.textfield.TextInputLayout
@@ -117,12 +84,12 @@
                             android:id="@+id/editPlaceName"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="🏛️ Nome do local"
+                            android:hint="📝 Nome do local"
                             android:inputType="textCapWords" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Endereço -->
+                    <!-- Endereço com busca -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -131,19 +98,32 @@
                         app:hintTextColor="@color/primary_blue">
 
                         <AutoCompleteTextView
-                            android:id="@+id/editPlaceAddress"
+                            android:id="@+id/autoCompleteAddress"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="📍 Endereço completo"
+                            android:hint="📍 Endereço"
                             android:inputType="textPostalAddress"
-                            android:completionThreshold="2" />
+                            android:completionThreshold="5"
+                            android:dropDownHeight="200dp" />
 
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Indicador de carregamento -->
+                    <ProgressBar
+                        android:id="@+id/progressBarAddress"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="-40dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:visibility="gone" />
 
                     <!-- Descrição -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
                         app:boxStrokeColor="@color/primary_blue"
                         app:hintTextColor="@color/primary_blue">
 
@@ -151,95 +131,14 @@
                             android:id="@+id/editPlaceDescription"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="📝 Descrição (opcional)"
+                            android:hint="📄 Descrição"
                             android:inputType="textMultiLine"
                             android:lines="3"
                             android:maxLines="5" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Card de programação -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                style="@style/CustomCard">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📅 Programação"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- Linha 1: Dia e Categoria -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📅 Dia da visita"
-                                android:textSize="12sp"
-                                android:textColor="@color/text_secondary"
-                                android:layout_marginBottom="4dp" />
-
-                            <Spinner
-                                android:id="@+id/spinnerDay"
-                                android:layout_width="match_parent"
-                                android:layout_height="48dp"
-                                android:background="@drawable/spinner_background" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="8dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="🏷️ Categoria"
-                                android:textSize="12sp"
-                                android:textColor="@color/text_secondary"
-                                android:layout_marginBottom="4dp" />
-
-                            <Spinner
-                                android:id="@+id/spinnerCategory"
-                                android:layout_width="match_parent"
-                                android:layout_height="48dp"
-                                android:background="@drawable/spinner_background" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                    <!-- Linha 2: Horário e Duração -->
+                    <!-- Data e Hora -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -255,10 +154,10 @@
                             app:hintTextColor="@color/primary_blue">
 
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/editPreferredTime"
+                                android:id="@+id/editPlaceDate"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="🕐 Horário"
+                                android:hint="📅 Data"
                                 android:inputType="none"
                                 android:focusable="false"
                                 android:clickable="true" />
@@ -274,92 +173,63 @@
                             app:hintTextColor="@color/primary_blue">
 
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/editVisitDuration"
+                                android:id="@+id/editPlaceTime"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="⏱️ Duração (horas)"
-                                android:inputType="numberDecimal" />
+                                android:hint="🕐 Horário"
+                                android:inputType="none"
+                                android:focusable="false"
+                                android:clickable="true" />
 
                         </com.google.android.material.textfield.TextInputLayout>
 
                     </LinearLayout>
 
-                    <!-- Custo -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:boxStrokeColor="@color/primary_blue"
-                        app:hintTextColor="@color/primary_blue">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editPlaceCost"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="💰 Custo estimado (R\$)"
-                            android:inputType="numberDecimal" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Card de prioridade -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                style="@style/CustomCard">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="⭐ Prioridade"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="16dp" />
-
-                    <RadioGroup
+                    <!-- ✅ NOVOS CAMPOS: Duração e Custo -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
-                        <RadioButton
-                            android:id="@+id/radioHighPriority"
+                        <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🔴 Alta"
-                            android:textColor="@color/priority_high"
-                            android:buttonTint="@color/priority_high" />
+                            android:layout_marginEnd="8dp"
+                            app:boxStrokeColor="@color/primary_blue"
+                            app:hintTextColor="@color/primary_blue"
+                            app:suffixText=" horas">
 
-                        <RadioButton
-                            android:id="@+id/radioMediumPriority"
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editPlaceDuration"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="⏱️ Duração"
+                                android:text="2"
+                                android:inputType="numberDecimal" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🟡 Média"
-                            android:textColor="@color/priority_medium"
-                            android:buttonTint="@color/priority_medium"
-                            android:checked="true" />
+                            android:layout_marginStart="8dp"
+                            app:boxStrokeColor="@color/primary_blue"
+                            app:hintTextColor="@color/primary_blue"
+                            app:prefixText="R\$ ">
 
-                        <RadioButton
-                            android:id="@+id/radioLowPriority"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="🟢 Baixa"
-                            android:textColor="@color/priority_low"
-                            android:buttonTint="@color/priority_low" />
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editPlaceCost"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="💰 Custo"
+                                android:text="0.00"
+                                android:inputType="numberDecimal" />
 
-                    </RadioGroup>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -373,8 +243,7 @@
                 android:text="✅ Salvar Local"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                style="@style/PrimaryButton"
-                android:layout_marginBottom="32dp" />
+                style="@style/PrimaryButton" />
 
         </LinearLayout>
 
