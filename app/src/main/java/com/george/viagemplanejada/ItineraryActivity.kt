@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.george.viagemplanejada.databinding.ActivityItineraryBinding
 import com.george.viagemplanejada.data.DataManager
+import com.george.viagemplanejada.data.PlaceItem
 
 class ItineraryActivity : AppCompatActivity() {
 
@@ -27,20 +28,18 @@ class ItineraryActivity : AppCompatActivity() {
         binding = ActivityItineraryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inicializar DataManager usando singleton
         dataManager = DataManager.getInstance(this)
 
         getTripData()
         setupUI()
         setupRecyclerView()
-        loadPlaces() // Carregar dados reais
+        loadPlaces()
         updateStats()
         filterPlacesByDay(selectedDay)
     }
 
     override fun onResume() {
         super.onResume()
-        // Recarregar dados quando voltar do AddPlaceActivity
         loadPlaces()
         updateStats()
         filterPlacesByDay(selectedDay)
@@ -81,7 +80,6 @@ class ItineraryActivity : AppCompatActivity() {
         }
     }
 
-    // Carregar dados reais do DataManager
     private fun loadPlaces() {
         places.clear()
         places.addAll(dataManager.getPlaces(tripId))
@@ -101,10 +99,10 @@ class ItineraryActivity : AppCompatActivity() {
     private fun filterPlacesByDay(day: String) {
         selectedDay = day
 
-        val filteredPlaces = if (day == "Todos") {
+        val filteredPlaces: List<PlaceItem> = if (day == "Todos") {
             places
         } else {
-            places.filter { it.day == day }
+            places.filter { it.day.contains(day) }
         }
 
         placeAdapter.updatePlaces(filteredPlaces)
@@ -165,7 +163,6 @@ class ItineraryActivity : AppCompatActivity() {
             .setTitle("🧭 Otimizar Roteiro")
             .setMessage("Deseja reorganizar os locais para otimizar o tempo de deslocamento?")
             .setPositiveButton("✅ Otimizar") { _, _ ->
-                // Otimização: ordenar por dia e prioridade
                 places.sortWith(compareBy<PlaceItem> { it.day }.thenByDescending {
                     when (it.priority) {
                         "Alta" -> 3
@@ -175,7 +172,6 @@ class ItineraryActivity : AppCompatActivity() {
                     }
                 })
 
-                // Salvar cada lugar individualmente (mantém a ordem)
                 places.forEachIndexed { index, place ->
                     dataManager.savePlace(tripId, place)
                 }
@@ -227,7 +223,7 @@ class ItineraryActivity : AppCompatActivity() {
         val intent = Intent(this, AddPlaceActivity::class.java)
         intent.putExtra("trip_id", tripId)
         intent.putExtra("trip_name", tripName)
-        intent.putExtra("edit_place_id", place.id) // Para modo de edição
+        intent.putExtra("edit_place_id", place.id)
         startActivity(intent)
     }
 
@@ -238,10 +234,7 @@ class ItineraryActivity : AppCompatActivity() {
             .setTitle("⚠️ Confirmar Remoção")
             .setMessage(message)
             .setPositiveButton("🗑️ Remover") { _, _ ->
-                // Remover do DataManager
                 dataManager.deletePlace(tripId, place.id)
-
-                // Atualizar lista local
                 places.remove(place)
                 filterPlacesByDay(selectedDay)
                 updateStats()

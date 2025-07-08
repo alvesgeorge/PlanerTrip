@@ -149,16 +149,16 @@ class AddEventActivity : AppCompatActivity() {
 
         try {
             // Criar e salvar o evento
+
             val event = EventItem(
                 id = dataManager.generateId(),
                 title = title,
                 description = description,
-                date = date,
-                startTime = startTime,
-                endTime = endTime,
-                category = category,
+                date = selectedDate,
+                time = selectedTime,  // ← Usar 'time' em vez de 'startTime'
                 location = location,
-                priority = priority
+                type = type,  // ← Usar 'type' em vez de 'category'
+                isCompleted = false
             )
 
             dataManager.saveEvent(tripId, event)

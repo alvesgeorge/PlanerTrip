@@ -50,7 +50,7 @@ class BudgetActivity : AppCompatActivity() {
         binding.textTripName.text = "💰 Orçamento: $tripName"
 
         // Carregar orçamento salvo
-        totalBudget = dataManager.getBudget(tripId)
+        totalBudget = dataManager.getBudget(tripId) // ← JÁ CORRIGIDO NO DATAMANAGER
     }
 
     private fun setupUI() {
@@ -83,10 +83,12 @@ class BudgetActivity : AppCompatActivity() {
 
     private fun loadExpenses() {
         expenses.clear()
-        expenses.addAll(dataManager.getExpenses(tripId))
+        expenses.addAll(dataManager.getExpenses(tripId))  // ← Agora retorna o tipo correto
         updateEmptyState()
         expenseAdapter.updateExpenses(expenses)
     }
+
+
 
     private fun updateEmptyState() {
         if (expenses.isEmpty()) {
@@ -139,7 +141,7 @@ class BudgetActivity : AppCompatActivity() {
                 val newBudget = editText.text.toString().toDoubleOrNull()
                 if (newBudget != null && newBudget > 0) {
                     totalBudget = newBudget
-                    dataManager.saveBudget(tripId, totalBudget)
+                    dataManager.saveBudget(tripId, totalBudget) // ← JÁ CORRIGIDO NO DATAMANAGER
                     updateBudgetInfo()
                     Toast.makeText(this, "✅ Orçamento salvo!", Toast.LENGTH_SHORT).show()
                 } else {

@@ -25,63 +25,65 @@
             android:layout_marginBottom="8dp">
 
             <TextView
-                android:id="@+id/textExpenseDescription"
+                android:id="@+id/textTripName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Descrição da despesa"
+                android:text="Nome da Viagem"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:maxLines="2"
+                android:maxLines="1"
                 android:ellipsize="end" />
 
             <TextView
-                android:id="@+id/textExpenseAmount"
+                android:id="@+id/textTripStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="R\$ 0,00"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/error_red"
-                android:layout_marginStart="8dp" />
+                android:text="✅ Programada"
+                android:textSize="12sp"
+                android:textColor="@color/success_green"
+                android:background="@drawable/status_chip_background"
+                android:padding="6dp" />
 
         </LinearLayout>
 
-        <!-- Categoria e Data -->
+        <!-- Destino -->
+        <TextView
+            android:id="@+id/textTripDestination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📍 Destino da viagem"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Footer com datas e duração -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
+            android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/textExpenseCategory"
+                android:id="@+id/textTripDates"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🏷️ Categoria"
-                android:textSize="14sp"
+                android:text="📅 01/01/2024 - 05/01/2024"
+                android:textSize="12sp"
                 android:textColor="@color/text_secondary" />
 
             <TextView
-                android:id="@+id/textExpenseDate"
+                android:id="@+id/textTripDuration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📅 01/01/2024"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary" />
+                android:text="⏱️ 5 dias"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary_blue" />
 
         </LinearLayout>
-
-        <!-- Método de pagamento -->
-        <TextView
-            android:id="@+id/textExpensePaymentMethod"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="💳 Método de pagamento"
-            android:textSize="12sp"
-            android:textColor="@color/text_hint" />
 
     </LinearLayout>
 

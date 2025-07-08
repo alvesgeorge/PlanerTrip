@@ -1,207 +1,204 @@
 package com.george.viagemplanejada
 
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.george.viagemplanejada.databinding.ActivityAddPlaceBinding
 import com.george.viagemplanejada.data.DataManager
-import com.george.viagemplanejada.utils.AddressSearchManager
-import com.george.viagemplanejada.utils.AddressSuggestion
-import java.util.Calendar
+import com.george.viagemplanejada.data.PlaceItem // ← IMPORT CORRETO
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AddPlaceActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityAddPlaceBinding
     private lateinit var dataManager: DataManager
-    private lateinit var addressSearchManager: AddressSearchManager
+    private lateinit var editPlaceName: EditText
+    private lateinit var editPlaceAddress: AutoCompleteTextView
+    private lateinit var spinnerDay: Spinner
+    private lateinit var spinnerCategory: Spinner
+    private lateinit var editVisitDuration: EditText
+    private lateinit var editPreferredTime: EditText
+    private lateinit var editPlaceCost: EditText
+    private lateinit var editPlaceDescription: EditText
+    private lateinit var buttonScanNote: Button
+    private lateinit var buttonSavePlace: Button
+    private lateinit var buttonBack: Button
+
+    // RadioButtons para prioridade
+    private lateinit var radioHighPriority: RadioButton
+    private lateinit var radioMediumPriority: RadioButton
+    private lateinit var radioLowPriority: RadioButton
+
     private var tripId: String = ""
     private var tripName: String = ""
-    private var editPlaceId: String = ""
-    private var isEditMode = false
-    private var addressSuggestions = mutableListOf<AddressSuggestion>()
-
-    // Flag para evitar loop infinito
-    private var isSelectingAddress = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_add_place)
 
-        binding = ActivityAddPlaceBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // Inicializar managers
         dataManager = DataManager.getInstance(this)
-        addressSearchManager = AddressSearchManager(this)
 
+        initViews()
         getTripData()
-        checkEditMode()
-        setupUI()
         setupSpinners()
-        setupTimePicker()
-        setupAddressSearch()
-
-        if (isEditMode) {
-            loadPlaceData()
-        }
+        setupListeners()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        addressSearchManager.cleanup()
-    }
+    private fun initViews() {
+        editPlaceName = findViewById(R.id.editPlaceName)
+        editPlaceAddress = findViewById(R.id.editPlaceAddress)
+        spinnerDay = findViewById(R.id.spinnerDay)
+        spinnerCategory = findViewById(R.id.spinnerCategory)
+        editVisitDuration = findViewById(R.id.editVisitDuration)
+        editPreferredTime = findViewById(R.id.editPreferredTime)
+        editPlaceCost = findViewById(R.id.editPlaceCost)
+        editPlaceDescription = findViewById(R.id.editPlaceDescription)
+        buttonScanNote = findViewById(R.id.buttonScanNote)
+        buttonSavePlace = findViewById(R.id.buttonSavePlace)
+        buttonBack = findViewById(R.id.buttonBack)
 
-    private fun setupAddressSearch() {
-        // Configurar busca de endereços com proteção contra loop
-        binding.editPlaceAddress.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
-            override fun afterTextChanged(s: Editable?) {
-                // Evitar busca durante seleção automática
-                if (isSelectingAddress) return
-
-                val query = s.toString().trim()
-                if (query.length >= 3) {
-                    searchAddresses(query)
-                } else {
-                    clearAddressSuggestions()
-                }
-            }
-        })
-
-        // Configurar dropdown de sugestões
-        setupAddressDropdown()
-    }
-
-
-    private fun searchAddresses(query: String) {
-        // Mostrar indicador de carregamento
-        binding.editPlaceAddress.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.drawable.ic_popup_sync, 0)
-
-        addressSearchManager.searchAddresses(query) { suggestions ->
-            addressSuggestions.clear()
-            addressSuggestions.addAll(suggestions)
-            updateAddressDropdown()
-
-            // Remover indicador de carregamento
-            binding.editPlaceAddress.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
-        }
-    }
-
-    private fun setupAddressDropdown() {
-        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line)
-        binding.editPlaceAddress.setAdapter(adapter)
-
-        binding.editPlaceAddress.setOnItemClickListener { parent, view, position, id ->
-            if (position < addressSuggestions.size) {
-                val suggestion = addressSuggestions[position]
-                selectAddress(suggestion)
-            }
-        }
-    }
-
-    private fun updateAddressDropdown() {
-        val suggestions = addressSuggestions.map { suggestion ->
-            val icon = if (suggestion.isLocal) "⭐" else "📍"
-            "$icon ${suggestion.name} - ${suggestion.country}"
-        }
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, suggestions)
-        binding.editPlaceAddress.setAdapter(adapter)
-
-        if (suggestions.isNotEmpty()) {
-            binding.editPlaceAddress.showDropDown()
-            Toast.makeText(this, "🌍 ${suggestions.size} sugestões encontradas", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun clearAddressSuggestions() {
-        addressSuggestions.clear()
-        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, emptyList<String>())
-        binding.editPlaceAddress.setAdapter(adapter)
-    }
-
-    private fun selectAddress(suggestion: AddressSuggestion) {
-        // ATIVAR FLAG para evitar loop
-        isSelectingAddress = true
-
-        // Preencher automaticamente o nome se estiver vazio
-        if (binding.editPlaceName.text.toString().trim().isEmpty()) {
-            binding.editPlaceName.setText(suggestion.name)
-        }
-
-        // Definir endereço completo
-        binding.editPlaceAddress.setText(suggestion.address)
-
-        // Auto-detectar categoria
-        autoSelectCategory(suggestion.category)
-
-        // Limpar sugestões
-        clearAddressSuggestions()
-
-        // Feedback visual com país
-        val icon = if (suggestion.isLocal) "⭐" else "📍"
-        Toast.makeText(this, "$icon ${suggestion.name} (${suggestion.country}) selecionado!", Toast.LENGTH_SHORT).show()
-
-        // DESATIVAR FLAG após um pequeno delay
-        binding.editPlaceAddress.postDelayed({
-            isSelectingAddress = false
-        }, 500)
-    }
-
-    private fun autoSelectCategory(detectedCategory: String) {
-        val categories = arrayOf("Turismo", "Cultura", "Natureza", "Lazer", "Gastronomia", "Compras", "Outros")
-        val position = categories.indexOf(detectedCategory)
-
-        if (position >= 0) {
-            binding.spinnerCategory.setSelection(position)
-            Toast.makeText(this, "🏷️ Categoria detectada: $detectedCategory", Toast.LENGTH_SHORT).show()
-        }
+        radioHighPriority = findViewById(R.id.radioHighPriority)
+        radioMediumPriority = findViewById(R.id.radioMediumPriority)
+        radioLowPriority = findViewById(R.id.radioLowPriority)
     }
 
     private fun getTripData() {
         tripId = intent.getStringExtra("trip_id") ?: ""
-        tripName = intent.getStringExtra("trip_name") ?: "Viagem"
-        editPlaceId = intent.getStringExtra("edit_place_id") ?: ""
-        isEditMode = editPlaceId.isNotEmpty()
-    }
+        tripName = intent.getStringExtra("trip_name") ?: ""
 
-    private fun checkEditMode() {
-        if (isEditMode) {
-            supportActionBar?.title = "✏️ Editar Local"
-            binding.buttonSavePlace.text = "✅ Atualizar Local"
-        } else {
-            supportActionBar?.title = "📍 Adicionar Local"
-            binding.buttonSavePlace.text = "✅ Salvar Local"
+        // Se não temos tripId, tentar obter da viagem atual
+        if (tripId.isEmpty()) {
+            val currentTrip = dataManager.getCurrentTrip()
+            if (currentTrip != null) {
+                tripId = currentTrip.id
+                tripName = currentTrip.name
+            }
         }
-    }
 
-    private fun setupUI() {
-        binding.buttonBack.setOnClickListener { finish() }
-        binding.buttonSavePlace.setOnClickListener { savePlace() }
+        supportActionBar?.title = "Adicionar Local - $tripName"
     }
 
     private fun setupSpinners() {
-        val days = arrayOf("Dia 1", "Dia 2", "Dia 3", "Dia 4", "Dia 5")
-        val dayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, days)
-        dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerDay.adapter = dayAdapter
+        // Setup do Spinner de Dias - usando dados da viagem real
+        val trip = dataManager.getTripById(tripId)
+        val daysList = if (trip != null) {
+            generateDaysList(trip.startDate, trip.endDate)
+        } else {
+            // Fallback para dias genéricos
+            listOf(
+                "📅 Dia 1",
+                "📅 Dia 2",
+                "📅 Dia 3",
+                "📅 Dia 4",
+                "📅 Dia 5"
+            )
+        }
 
-        val categories = arrayOf("Turismo", "Cultura", "Natureza", "Lazer", "Gastronomia", "Compras", "Outros")
-        val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
-        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerCategory.adapter = categoryAdapter
+        val daysAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, daysList)
+        daysAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerDay.adapter = daysAdapter
+
+        // Setup do Spinner de Categorias
+        val categories = listOf(
+            "🏛️ Turismo",
+            "🎭 Cultura",
+            "🌳 Natureza",
+            "🎡 Lazer",
+            "🍽️ Gastronomia",
+            "🛍️ Compras",
+            "🏨 Hospedagem",
+            "🚗 Transporte",
+            "📍 Outros"
+        )
+
+        val categoriesAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        categoriesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategory.adapter = categoriesAdapter
     }
 
-    private fun setupTimePicker() {
-        binding.editPreferredTime.setOnClickListener {
+    private fun generateDaysList(startDate: String, endDate: String): List<String> {
+        val daysList = mutableListOf<String>()
+
+        if (startDate.isNotEmpty() && endDate.isNotEmpty()) {
+            try {
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val start = sdf.parse(startDate)
+                val end = sdf.parse(endDate)
+
+                if (start != null && end != null) {
+                    val calendar = Calendar.getInstance()
+                    calendar.time = start
+                    var dayCount = 1
+
+                    while (calendar.time <= end) {
+                        val dayString = "📅 Dia $dayCount (${sdf.format(calendar.time)})"
+                        daysList.add(dayString)
+                        calendar.add(Calendar.DAY_OF_MONTH, 1)
+                        dayCount++
+                    }
+                }
+            } catch (e: Exception) {
+                // Se houver erro, usar dias genéricos
+                for (i in 1..5) {
+                    daysList.add("�� Dia $i")
+                }
+            }
+        } else {
+            // Dias genéricos se não houver datas
+            for (i in 1..5) {
+                daysList.add("📅 Dia $i")
+            }
+        }
+
+        return daysList
+    }
+
+    private fun setupListeners() {
+        buttonBack.setOnClickListener {
+            finish()
+        }
+
+        // Configurar seletor de horário
+        editPreferredTime.setOnClickListener {
             showTimePicker()
         }
+
+        // Configurar scanner de nota (placeholder)
+        buttonScanNote.setOnClickListener {
+            Toast.makeText(this, "📸 Funcionalidade de scanner em desenvolvimento!", Toast.LENGTH_SHORT).show()
+        }
+
+        // Configurar AutoComplete para endereços
+        setupAddressAutoComplete()
+
+        buttonSavePlace.setOnClickListener {
+            savePlace()
+        }
+    }
+
+    private fun setupAddressAutoComplete() {
+        val famousPlaces = arrayOf(
+            "Cristo Redentor - Rio de Janeiro, RJ",
+            "Pão de Açúcar - Rio de Janeiro, RJ",
+            "Copacabana - Rio de Janeiro, RJ",
+            "Ipanema - Rio de Janeiro, RJ",
+            "Avenida Paulista - São Paulo, SP",
+            "Marco Zero - Recife, PE",
+            "Pelourinho - Salvador, BA",
+            "Centro Histórico - Ouro Preto, MG",
+            "Cataratas do Iguaçu - Foz do Iguaçu, PR",
+            "Teatro Amazonas - Manaus, AM",
+            "Bonito - Mato Grosso do Sul",
+            "Fernando de Noronha - Pernambuco",
+            "Gramado - Rio Grande do Sul",
+            "Campos do Jordão - São Paulo",
+            "Búzios - Rio de Janeiro"
+        )
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, famousPlaces)
+        editPlaceAddress.setAdapter(adapter)
+        editPlaceAddress.threshold = 2
     }
 
     private fun showTimePicker() {
@@ -210,151 +207,90 @@ class AddPlaceActivity : AppCompatActivity() {
         val minute = calendar.get(Calendar.MINUTE)
 
         TimePickerDialog(this, { _, selectedHour, selectedMinute ->
-            val timeFormat = String.format("%02d:%02d", selectedHour, selectedMinute)
-            binding.editPreferredTime.setText(timeFormat)
+            val timeString = String.format("%02d:%02d", selectedHour, selectedMinute)
+            editPreferredTime.setText(timeString)
         }, hour, minute, true).show()
     }
 
-    private fun loadPlaceData() {
-        // ATIVAR FLAG durante carregamento
-        isSelectingAddress = true
-
-        val places = dataManager.getPlaces(tripId)
-        val place = places.find { it.id == editPlaceId }
-
-        if (place != null) {
-            binding.editPlaceName.setText(place.name)
-            binding.editPlaceAddress.setText(place.address)
-            binding.editPlaceDescription.setText(place.description)
-            binding.editVisitDuration.setText(place.duration.toString())
-            binding.editPreferredTime.setText(place.preferredTime)
-
-            if (place.cost > 0) {
-                binding.editPlaceCost.setText(place.cost.toString())
-            }
-
-            val dayAdapter = binding.spinnerDay.adapter as ArrayAdapter<String>
-            val dayPosition = dayAdapter.getPosition(place.day)
-            if (dayPosition >= 0) {
-                binding.spinnerDay.setSelection(dayPosition)
-            }
-
-            val categoryAdapter = binding.spinnerCategory.adapter as ArrayAdapter<String>
-            val categoryPosition = categoryAdapter.getPosition(place.category)
-            if (categoryPosition >= 0) {
-                binding.spinnerCategory.setSelection(categoryPosition)
-            }
-
-            when (place.priority) {
-                "Alta" -> binding.radioHighPriority.isChecked = true
-                "Média" -> binding.radioMediumPriority.isChecked = true
-                "Baixa" -> binding.radioLowPriority.isChecked = true
-            }
-
-            Toast.makeText(this, "📝 Dados carregados para edição", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "❌ Erro ao carregar dados do local", Toast.LENGTH_SHORT).show()
-            finish()
-        }
-
-        // DESATIVAR FLAG após carregamento
-        binding.editPlaceAddress.postDelayed({
-            isSelectingAddress = false
-        }, 1000)
-    }
-
-
     private fun savePlace() {
-        val name = binding.editPlaceName.text.toString().trim()
-        val address = binding.editPlaceAddress.text.toString().trim()
-        val description = binding.editPlaceDescription.text.toString().trim()
-        val day = binding.spinnerDay.selectedItem.toString()
-        val category = binding.spinnerCategory.selectedItem.toString()
-        val durationText = binding.editVisitDuration.text.toString().trim()
-        val preferredTime = binding.editPreferredTime.text.toString().trim()
-        val priority = getSelectedPriority()
-        val costText = binding.editPlaceCost.text.toString().trim()
+        val name = editPlaceName.text.toString().trim()
+        val address = editPlaceAddress.text.toString().trim()
+        val day = spinnerDay.selectedItem.toString()
+        val category = spinnerCategory.selectedItem.toString()
+        val durationText = editVisitDuration.text.toString().trim()
+        val preferredTime = editPreferredTime.text.toString().trim()
+        val costText = editPlaceCost.text.toString().trim()
+        val description = editPlaceDescription.text.toString().trim()
 
+        // Validações básicas
         if (name.isEmpty()) {
-            binding.editPlaceName.error = "Campo obrigatório"
-            binding.editPlaceName.requestFocus()
-            Toast.makeText(this, "⚠️ Digite o nome do local", Toast.LENGTH_SHORT).show()
+            editPlaceName.error = "Nome é obrigatório"
+            editPlaceName.requestFocus()
             return
         }
 
         if (address.isEmpty()) {
-            binding.editPlaceAddress.error = "Campo obrigatório"
-            binding.editPlaceAddress.requestFocus()
-            Toast.makeText(this, "⚠️ Digite o endereço", Toast.LENGTH_SHORT).show()
+            editPlaceAddress.error = "Endereço é obrigatório"
+            editPlaceAddress.requestFocus()
             return
         }
 
-        if (durationText.isEmpty()) {
-            binding.editVisitDuration.error = "Campo obrigatório"
-            binding.editVisitDuration.requestFocus()
-            Toast.makeText(this, "⚠️ Digite o tempo de visita", Toast.LENGTH_SHORT).show()
+        if (tripId.isEmpty()) {
+            Toast.makeText(this, "❌ Erro: ID da viagem não encontrado", Toast.LENGTH_LONG).show()
             return
         }
 
-        if (preferredTime.isEmpty()) {
-            binding.editPreferredTime.error = "Campo obrigatório"
-            binding.editPreferredTime.requestFocus()
-            Toast.makeText(this, "⚠️ Selecione o horário preferido", Toast.LENGTH_SHORT).show()
-            return
+        // Determinar prioridade
+        val priority = when {
+            radioHighPriority.isChecked -> "Alta"
+            radioMediumPriority.isChecked -> "Média"
+            radioLowPriority.isChecked -> "Baixa"
+            else -> "Média"
         }
 
+        // Converter duração para Double
+        val duration = if (durationText.isNotEmpty()) {
+            durationText.toDoubleOrNull() ?: 2.0
+        } else {
+            2.0
+        }
+
+        // Converter custo para Double
+        val cost = if (costText.isNotEmpty()) {
+            costText.toDoubleOrNull() ?: 0.0
+        } else {
+            0.0
+        }
+
+        // Criar objeto PlaceItem usando o tipo correto
+        val place = PlaceItem(
+            id = dataManager.generateId(), // ← USAR assim
+            name = name,
+            address = address,
+            day = day,
+            preferredTime = preferredTime,
+            duration = duration,
+            category = category,
+            priority = priority,
+            cost = cost,
+            description = description
+        )
+
+        // Salvar usando o método savePlace do DataManager
         try {
-            val duration = durationText.toDouble()
-            val cost = if (costText.isNotEmpty()) costText.toDouble() else 0.0
+            dataManager.savePlace(tripId, place)
 
-            if (duration <= 0) {
-                binding.editVisitDuration.error = "Deve ser maior que zero"
-                binding.editVisitDuration.requestFocus()
-                Toast.makeText(this, "⚠️ O tempo de visita deve ser maior que zero", Toast.LENGTH_SHORT).show()
-                return
-            }
+            Toast.makeText(this, "✅ Local '$name' adicionado com sucesso!", Toast.LENGTH_SHORT).show()
 
-            if (cost < 0) {
-                binding.editPlaceCost.error = "Não pode ser negativo"
-                binding.editPlaceCost.requestFocus()
-                Toast.makeText(this, "⚠️ O custo não pode ser negativo", Toast.LENGTH_SHORT).show()
-                return
-            }
-
-            val placeItem = PlaceItem(
-                id = if (isEditMode) editPlaceId else dataManager.generateId(),
-                name = name,
-                address = address,
-                description = description,
-                day = day,
-                category = category,
-                duration = duration,
-                preferredTime = preferredTime,
-                priority = priority,
-                cost = cost
-            )
-
-            dataManager.savePlace(tripId, placeItem)
-
-            val actionText = if (isEditMode) "atualizado" else "adicionado"
-            Toast.makeText(this, "✅ Local $actionText com sucesso!", Toast.LENGTH_SHORT).show()
-
-            setResult(RESULT_OK)
+            // Retornar para a tela anterior
+            val resultIntent = Intent()
+            resultIntent.putExtra("place_added", true)
+            resultIntent.putExtra("place_name", name)
+            setResult(RESULT_OK, resultIntent)
             finish()
 
-        } catch (e: NumberFormatException) {
-            Toast.makeText(this, "⚠️ Valores numéricos inválidos", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "❌ Erro ao salvar: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun getSelectedPriority(): String {
-        return when {
-            binding.radioHighPriority.isChecked -> "Alta"
-            binding.radioMediumPriority.isChecked -> "Média"
-            binding.radioLowPriority.isChecked -> "Baixa"
-            else -> "Média"
+            Toast.makeText(this, "❌ Erro ao salvar local: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 }

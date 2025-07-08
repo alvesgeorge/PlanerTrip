@@ -1,32 +1,29 @@
 package com.george.viagemplanejada
 
-import android.graphics.Color
+import android.animation.ObjectAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import java.text.NumberFormat
-import java.util.*
+import com.george.viagemplanejada.data.PlaceItem
 
 class PlaceAdapter(
     private var places: List<PlaceItem>,
-    private val onPlaceAction: (PlaceItem, String) -> Unit
+    private val onPlaceClick: (PlaceItem, String) -> Unit
 ) : RecyclerView.Adapter<PlaceAdapter.PlaceViewHolder>() {
 
     class PlaceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val priorityIndicator: LinearLayout = itemView.findViewById(R.id.priorityIndicator)
-        val dayText: TextView = itemView.findViewById(R.id.textPlaceDay)
-        val timeText: TextView = itemView.findViewById(R.id.textPlaceTime)
-        val categoryText: TextView = itemView.findViewById(R.id.textPlaceCategory)
-        val nameText: TextView = itemView.findViewById(R.id.textPlaceName)
-        val addressText: TextView = itemView.findViewById(R.id.textPlaceAddress)
-        val durationText: TextView = itemView.findViewById(R.id.textPlaceDuration)
-        val costText: TextView = itemView.findViewById(R.id.textPlaceCost)
-        val optionsButton: Button = itemView.findViewById(R.id.buttonPlaceOptions)
-        val directionsButton: Button = itemView.findViewById(R.id.buttonDirections)
+        val textCategoryIcon: TextView = itemView.findViewById(R.id.textCategoryIcon)
+        val textPlaceName: TextView = itemView.findViewById(R.id.textPlaceName)
+        val textPlaceAddress: TextView = itemView.findViewById(R.id.textPlaceAddress)
+        val textPlaceDay: TextView = itemView.findViewById(R.id.textPlaceDay)
+        val textPlaceTime: TextView = itemView.findViewById(R.id.textPlaceTime)
+        val textPlaceDuration: TextView = itemView.findViewById(R.id.textPlaceDuration)
+        val textPlaceCategory: TextView = itemView.findViewById(R.id.textPlaceCategory)
+        val textPlacePriority: TextView = itemView.findViewById(R.id.textPlacePriority)
+        val textPlaceCost: TextView = itemView.findViewById(R.id.textPlaceCost)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaceViewHolder {
@@ -37,100 +34,130 @@ class PlaceAdapter(
 
     override fun onBindViewHolder(holder: PlaceViewHolder, position: Int) {
         val place = places[position]
+        val context = holder.itemView.context
 
-        // Priority color
-        val priorityColor = when (place.priority) {
-            "Alta" -> Color.parseColor("#F44336")
-            "Média" -> Color.parseColor("#FF9800")
-            "Baixa" -> Color.parseColor("#4CAF50")
-            else -> Color.parseColor("#9E9E9E")
-        }
-        holder.priorityIndicator.setBackgroundColor(priorityColor)
+        // Nome e endereço
+        holder.textPlaceName.text = place.name
+        holder.textPlaceAddress.text = place.address
 
-        // Basic info
-        holder.dayText.text = place.day
-        holder.timeText.text = place.preferredTime
-        holder.nameText.text = place.name
-        holder.addressText.text = "📍 ${place.address}"
-        holder.durationText.text = "⏱️ ${place.duration}h"
+        // Informações com emojis
+        holder.textPlaceDay.text = "📅 ${place.day}"
+        holder.textPlaceTime.text = "🕐 ${place.preferredTime}"
+        holder.textPlaceDuration.text = "⏱️ ${place.duration.toInt()}h"
 
-        // Category with icon
-        val categoryIcon = when (place.category) {
-            "Turismo" -> "🏛️"
-            "Cultura" -> "🎭"
-            "Natureza" -> "��"
-            "Lazer" -> "🏖️"
-            "Gastronomia" -> "🍽️"
-            "Compras" -> "🛍️"
-            else -> "📍"
-        }
-        holder.categoryText.text = "$categoryIcon ${place.category}"
+        // Categoria com ícone e cor
+        val (categoryIcon, categoryColor) = getCategoryIconAndColor(place.category)
+        holder.textCategoryIcon.text = categoryIcon
+        holder.textPlaceCategory.text = "$categoryIcon ${place.category.removePrefix("🏛️ ").removePrefix("🎭 ").removePrefix("🌳 ").removePrefix("🎡 ").removePrefix("🍽️ ").removePrefix("🛍️ ").removePrefix("🏨 ").removePrefix("🚗 ").removePrefix("📍 ")}"
+        holder.textPlaceCategory.setTextColor(ContextCompat.getColor(context, categoryColor))
 
-        // Cost (show only if > 0)
+        // Prioridade com cor e background
+        holder.textPlacePriority.text = place.priority.uppercase()
+        val (priorityColor, priorityBg) = getPriorityColorAndBackground(place.priority)
+        holder.textPlacePriority.setTextColor(ContextCompat.getColor(context, android.R.color.white))
+        holder.textPlacePriority.setBackgroundColor(ContextCompat.getColor(context, priorityColor))
+
+        // Custo com formatação
         if (place.cost > 0) {
-            holder.costText.text = "💰 ${NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(place.cost)}"
-            holder.costText.visibility = View.VISIBLE
+            holder.textPlaceCost.text = "💰 R\$ ${String.format("%.2f", place.cost)}"
+            holder.textPlaceCost.visibility = View.VISIBLE
         } else {
-            holder.costText.visibility = View.GONE
+            holder.textPlaceCost.visibility = View.GONE
         }
 
-        // Click listeners
+        // Animação de entrada
+        animateItemEntry(holder.itemView, position)
+
+        // Click listeners com feedback visual
         holder.itemView.setOnClickListener {
-            onPlaceAction(place, "DETAILS")
-        }
-
-        holder.optionsButton.setOnClickListener {
-            showOptionsMenu(holder.itemView, place)
-        }
-
-        holder.directionsButton.setOnClickListener {
-            onPlaceAction(place, "DIRECTIONS")
-        }
-    }
-
-    private fun showOptionsMenu(view: View, place: PlaceItem) {
-        val popup = androidx.appcompat.widget.PopupMenu(view.context, view)
-        popup.menuInflater.inflate(R.menu.place_options_menu, popup.menu)
-
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_details -> {
-                    onPlaceAction(place, "DETAILS")
-                    true
-                }
-                R.id.action_edit -> {
-                    onPlaceAction(place, "EDIT")
-                    true
-                }
-                R.id.action_delete -> {
-                    onPlaceAction(place, "DELETE")
-                    true
-                }
-                else -> false
+            animateClick(holder.itemView) {
+                onPlaceClick(place, "DETAILS")
             }
         }
 
-        popup.show()
+        holder.itemView.setOnLongClickListener {
+            animateClick(holder.itemView) {
+                onPlaceClick(place, "EDIT")
+            }
+            true
+        }
     }
 
     override fun getItemCount(): Int = places.size
 
     fun updatePlaces(newPlaces: List<PlaceItem>) {
+        val oldSize = places.size
         places = newPlaces
-        notifyDataSetChanged()
+
+        when {
+            oldSize == 0 && newPlaces.isNotEmpty() -> {
+                notifyItemRangeInserted(0, newPlaces.size)
+            }
+            oldSize > 0 && newPlaces.isEmpty() -> {
+                notifyItemRangeRemoved(0, oldSize)
+            }
+            else -> {
+                notifyDataSetChanged()
+            }
+        }
+    }
+
+    private fun getCategoryIconAndColor(category: String): Pair<String, Int> {
+        return when {
+            category.contains("Turismo") -> "🏛️" to R.color.category_tourism
+            category.contains("Cultura") -> "🎭" to R.color.category_culture
+            category.contains("Natureza") -> "🌳" to R.color.category_nature
+            category.contains("Lazer") -> "🎡" to R.color.category_leisure
+            category.contains("Gastronomia") -> "🍽️" to R.color.category_food
+            category.contains("Compras") -> "��️" to R.color.category_shopping
+            category.contains("Hospedagem") -> "🏨" to R.color.category_hotel
+            category.contains("Transporte") -> "��" to R.color.category_transport
+            else -> "��" to R.color.category_other
+        }
+    }
+
+    private fun getPriorityColorAndBackground(priority: String): Pair<Int, Int> {
+        return when (priority) {
+            "Alta" -> R.color.priority_high to R.drawable.priority_badge
+            "Média" -> R.color.priority_medium to R.drawable.priority_badge
+            "Baixa" -> R.color.priority_low to R.drawable.priority_badge
+            else -> R.color.text_secondary to R.drawable.priority_badge
+        }
+    }
+
+    private fun animateItemEntry(view: View, position: Int) {
+        view.alpha = 0f
+        view.translationY = 100f
+
+        view.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(300)
+            .setStartDelay((position * 50).toLong())
+            .start()
+    }
+
+    private fun animateClick(view: View, action: () -> Unit) {
+        val scaleDown = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.95f)
+        val scaleUp = ObjectAnimator.ofFloat(view, "scaleX", 0.95f, 1f)
+
+        scaleDown.duration = 100
+        scaleUp.duration = 100
+
+        scaleDown.start()
+        scaleDown.doOnEnd {
+            scaleUp.start()
+            action()
+        }
     }
 }
 
-// Data class para locais
-data class PlaceItem(
-    val id: String,
-    val name: String,
-    val address: String,
-    val description: String,
-    val day: String,
-    val category: String,
-    val duration: Double,
-    val preferredTime: String,
-    val priority: String,
-    val cost: Double
-)
+// Extensão para ObjectAnimator
+private fun ObjectAnimator.doOnEnd(action: () -> Unit) {
+    addListener(object : android.animation.Animator.AnimatorListener {
+        override fun onAnimationStart(animation: android.animation.Animator) {}
+        override fun onAnimationEnd(animation: android.animation.Animator) { action() }
+        override fun onAnimationCancel(animation: android.animation.Animator) {}
+        override fun onAnimationRepeat(animation: android.animation.Animator) {}
+    })
+}

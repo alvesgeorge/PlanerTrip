@@ -159,55 +159,34 @@ class CalendarActivity : AppCompatActivity() {
     }
 
     private fun showEventDetails(event: EventItem) {
-        val timeInfo = if (event.endTime.isNotEmpty()) {
-            "${event.startTime} - ${event.endTime}"
-        } else {
-            event.startTime
-        }
-
-        val locationInfo = if (event.location.isNotEmpty()) {
-            "\n📍 Local: ${event.location}"
-        } else {
-            ""
-        }
-
         val details = buildString {
-            appendLine("🕐 Horário: $timeInfo")
-            appendLine("🏷️ Categoria: ${event.category}")
-            appendLine("⭐ Prioridade: ${event.priority}")
-            if (locationInfo.isNotEmpty()) {
-                append(locationInfo)
-            }
-            if (event.description.isNotEmpty()) {
-                appendLine("\n📝 Descrição:")
-                append(event.description)
-            }
+            appendLine("📅 Data: ${event.date}")
+            appendLine("🕐 Horário: ${event.time}")  // ← Usar 'time'
+            appendLine("📍 Local: ${if (event.location.isNotEmpty()) event.location else "Não definido"}")
+            appendLine("🏷️ Tipo: ${event.type}")  // ← Usar 'type'
+            appendLine("📝 Descrição: ${event.description}")
         }
 
         AlertDialog.Builder(this)
             .setTitle(event.title)
             .setMessage(details)
             .setPositiveButton("OK", null)
-            .setNeutralButton("✏️ Editar") { _, _ ->
-                editEvent(event)
-            }
-            .setNegativeButton("🗑️ Excluir") { _, _ ->
-                deleteEvent(event)
-            }
             .show()
     }
 
+
+
     private fun editEvent(event: EventItem) {
-        Toast.makeText(this, "✏️ Editar: ${event.title}", Toast.LENGTH_SHORT).show()
-        // TODO: Implementar edição
+        val intent = Intent(this, AddEventActivity::class.java)
+        intent.putExtra("event_id", event.id)
+        intent.putExtra("event_title", event.title)
+        startActivity(intent)
     }
 
     private fun deleteEvent(event: EventItem) {
-        val message = "Deseja excluir o evento ${event.title}?"
-
         AlertDialog.Builder(this)
             .setTitle("⚠️ Confirmar Exclusão")
-            .setMessage(message)
+            .setMessage("Deseja excluir o evento '${event.title}'?")
             .setPositiveButton("🗑️ Excluir") { _, _ ->
                 dataManager.deleteEvent(tripId, event.id)
                 loadEvents()

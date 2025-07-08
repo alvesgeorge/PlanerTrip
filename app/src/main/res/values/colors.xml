@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Cores básicas do Android (obrigatórias) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -8,11 +9,47 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Cores do app -->
+    <!-- Cores principais do tema de viagem -->
     <color name="primary_blue">#2196F3</color>
-    <color name="primary_dark">#1976D2</color>
+    <color name="primary_blue_dark">#1976D2</color>
+    <color name="primary_blue_light">#BBDEFB</color>
+
+    <!-- Cores secundárias -->
     <color name="accent_orange">#FF9800</color>
-    <color name="background_light">#F5F5F5</color>
+    <color name="accent_orange_light">#FFE0B2</color>
+
+    <!-- Cores de status -->
+    <color name="success_green">#4CAF50</color>
+    <color name="warning_amber">#FFC107</color>
+    <color name="error_red">#F44336</color>
+
+    <!-- Cores de prioridade -->
+    <color name="priority_high">#E53935</color>
+    <color name="priority_medium">#FB8C00</color>
+    <color name="priority_low">#43A047</color>
+
+    <!-- Cores de fundo -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="background_white">#FFFFFF</color>
+    <color name="surface_white">#FFFFFF</color>
+
+    <!-- Cores de texto -->
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+    <color name="text_hint">#BDBDBD</color>
+
+    <!-- Cores de categoria -->
+    <color name="category_tourism">#9C27B0</color>
+    <color name="category_culture">#E91E63</color>
+    <color name="category_nature">#4CAF50</color>
+    <color name="category_leisure">#FF5722</color>
+    <color name="category_food">#FF9800</color>
+    <color name="category_shopping">#795548</color>
+    <color name="category_hotel">#607D8B</color>
+    <color name="category_transport">#3F51B5</color>
+    <color name="category_other">#9E9E9E</color>
+
+    <!-- Gradientes -->
+    <color name="gradient_start">#2196F3</color>
+    <color name="gradient_end">#21CBF3</color>
 </resources>
